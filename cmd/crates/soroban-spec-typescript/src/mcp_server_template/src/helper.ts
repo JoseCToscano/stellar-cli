@@ -110,16 +110,16 @@ export async function submitTransaction(
           return {
             status: 'SUCCESS',
             hash: submittedTx.hash,
-            resultXdr: typeof tx.resultXdr === 'string' ? tx.resultXdr : tx.resultXdr?.toXDR() || '',
-            resultMetaXdr: typeof tx.resultMetaXdr === 'string' ? tx.resultMetaXdr : tx.resultMetaXdr?.toXDR() || '',
+            resultXdr: typeof tx.resultXdr === 'string' ? tx.resultXdr : undefined,
+            resultMetaXdr: typeof tx.resultMetaXdr === 'string' ? tx.resultMetaXdr : undefined,
             response: tx
           };
         } else if (tx.status === "FAILED") {
           return {
             status: 'FAILED',
             hash: submittedTx.hash,
-            resultXdr: typeof tx.resultXdr === 'string' ? tx.resultXdr : tx.resultXdr?.toXDR() || '',
-            resultMetaXdr: typeof tx.resultMetaXdr === 'string' ? tx.resultMetaXdr : tx.resultMetaXdr?.toXDR() || '',
+            resultXdr: typeof tx.resultXdr === 'string' ? tx.resultXdr : undefined,
+            resultMetaXdr: typeof tx.resultMetaXdr === 'string' ? tx.resultMetaXdr : undefined,
             response: tx
           };
         }
@@ -128,6 +128,26 @@ export async function submitTransaction(
         retries++;
         
       } catch (error: any) {
+        console.error('Error checking transaction status:', error.message);
+        
+        // Check for XDR parsing error (Bad union switch)
+        if (error.message.includes('Bad union switch')) {
+          // Even though we can't parse the response, the transaction might still be processing
+          // We should return a TIMEOUT status to avoid blocking indefinitely
+          await new Promise(resolve => setTimeout(resolve, pollingIntervalMs));
+          retries++;
+          
+          // After some retries, just return the transaction hash for manual checking
+          if (retries >= maxRetries / 2) {
+            return {
+              status: 'TIMEOUT',
+              hash: submittedTx.hash,
+              response: { message: "Transaction submitted but status check failed due to XDR parsing error" }
+            };
+          }
+          continue;
+        }
+        
         if (error.message.includes("404") || error.message.includes("NOT_FOUND")) {
           await new Promise(resolve => setTimeout(resolve, pollingIntervalMs));
           retries++;
@@ -143,6 +163,7 @@ export async function submitTransaction(
     };
     
   } catch (error: any) {
+    console.error('Submit transaction error:', error);
     throw new Error(`Transaction submission failed: ${error.message}`);
   }
 }

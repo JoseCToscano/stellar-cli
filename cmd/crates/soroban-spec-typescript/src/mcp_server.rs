@@ -130,8 +130,7 @@ impl McpServerGenerator {
         let template_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/mcp_server_template");
         let template = fs::read_to_string(template_dir.join("src/index.ts"))?;
         let helper_content = fs::read_to_string(template_dir.join("src/helper.ts"))?;
-        let logger_content = fs::read_to_string(template_dir.join("src/logger.ts"))?;
-
+        
         // Replace placeholders in the template
         let mut index_content = template
             .replace("INSERT_NAME_HERE", name)
@@ -152,8 +151,7 @@ import {
   boolToScVal, 
   u32ToScVal,
   submitTransaction 
-} from './helper.js';
-import { log } from './logger.js';"#;
+} from './helper.js';"#;
 
         index_content = index_content.replace(
             r#"import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -170,9 +168,6 @@ import { z } from 'zod';"#,
 
         // Write helper.ts
         fs::write(output_dir.join("src/helper.ts"), helper_content)?;
-
-        // Write logger.ts
-        fs::write(output_dir.join("src/logger.ts"), logger_content)?;
 
         // Copy and update package.json
         let package_json = fs::read_to_string(template_dir.join("package.json"))?;
@@ -316,8 +311,8 @@ import { z } from 'zod';"#,
       if(!signAndSubmit) {{
         return {{
           content: [
-            {{ type: "text", text: "Simulation Results:" }},
-            {{ type: "text", text: JSON.stringify(simulateResult, null, 2) }}
+            {{ type: "text", text: "Transaction XDR" }},
+            {{ type: "text", text: preparedXdr }}
           ]
         }};
       }}
