@@ -113,7 +113,7 @@ impl McpServerGenerator {
         }
     }
 
-    pub fn generate(&self, output_dir: &Path, name: &str, spec: &[ScSpecEntry]) -> Result<(), Error> {
+    pub fn generate(&self, output_dir: &Path, name: &str, spec: &[ScSpecEntry], contract_id: &str) -> Result<(), Error> {
         // Create the output directory if it doesn't exist
         fs::create_dir_all(output_dir)?;
 
@@ -131,14 +131,96 @@ impl McpServerGenerator {
         let template = fs::read_to_string(template_dir.join("src/index.ts"))?;
 
         // Replace placeholders in the template
-        let index_content = template
+        let mut index_content = template
             .replace("INSERT_NAME_HERE", name)
             .replace("INSERT_TOOLS_HERE", &tools);
+
+        // Replace imports section with our enhanced version
+        let imports = r#"import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { Contract, nativeToScVal, xdr, TransactionBuilder, SorobanRpc, Keypair, Address } from '@stellar/stellar-sdk';
+import { z } from 'zod';
+import { addressToScVal, i128ToScVal, u128ToScVal, stringToSymbol, numberToU64, numberToI128, boolToScVal, u32ToScVal } from './helper.js';"#;
+
+        index_content = index_content.replace(
+            r#"import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { Contract, nativeToScVal, xdr, TransactionBuilder, SorobanRpc, Keypair } from '@stellar/stellar-sdk';
+import { z } from 'zod';"#,
+            imports
+        );
 
         // Write the generated code to index.ts
         let index_path = output_dir.join("src/index.ts");
         fs::create_dir_all(index_path.parent().unwrap())?;
         fs::write(index_path, index_content)?;
+
+        // Copy helper.ts
+        let helper_content = r#"import { Address, nativeToScVal, xdr } from '@stellar/stellar-sdk';
+
+/**
+ * Convert a string to a Symbol ScVal
+ */
+export const stringToSymbol = (val: string) => {
+  return nativeToScVal(val, { type: "symbol" });
+};
+
+/**
+ * Convert a number to a u64 ScVal with 2 decimal precision
+ */
+export const numberToU64 = (val: number) => {
+  const num = parseInt((val * 100).toFixed(0));
+  return nativeToScVal(num, { type: "u64" });
+};
+
+/**
+ * Convert a number to an i128 ScVal with 2 decimal precision
+ */
+export const numberToI128 = (val: number) => {
+  const num = parseInt((val * 100).toFixed(0));
+  return nativeToScVal(num, { type: "i128" });
+};
+
+/**
+ * Convert a Stellar address to ScVal
+ */
+export function addressToScVal(addressStr: string) {
+  // Validate and convert the address
+  const address = Address.fromString(addressStr);
+  // Convert to ScVal
+  return nativeToScVal(address);
+}
+
+/**
+ * Convert a string to an i128 ScVal
+ * This is useful for handling large numbers that exceed JavaScript's number precision
+ */
+export function i128ToScVal(value: string) {
+  return nativeToScVal(value, { type: "i128" });
+}
+
+/**
+ * Convert a string to a u128 ScVal
+ * This is useful for handling large numbers that exceed JavaScript's number precision
+ */
+export function u128ToScVal(value: string) {
+  return nativeToScVal(value, { type: "u128" });
+}
+
+/**
+ * Convert a boolean to an ScVal
+ */
+export function boolToScVal(value: boolean) {
+  return xdr.ScVal.scvBool(value);
+}
+
+/**
+ * Convert a number to a u32 ScVal
+ */
+export function u32ToScVal(value: number) {
+  return xdr.ScVal.scvU32(value);
+}"#;
+        fs::write(output_dir.join("src/helper.ts"), helper_content)?;
 
         // Copy and update package.json
         let package_json = fs::read_to_string(template_dir.join("package.json"))?;
@@ -161,6 +243,37 @@ impl McpServerGenerator {
             template_dir.join(".env.example"),
             output_dir.join(".env.example"),
         )?;
+
+        // Print success message with next steps
+        println!("\n✨ Generated MCP server in {}", output_dir.display());
+        println!("\n📝 Next steps:");
+        println!("1. Install dependencies and build the project:");
+        println!("   ```");
+        println!("   cd {}", output_dir.display());
+        println!("   npm install");
+        println!("   npm run build");
+        println!("   ```");
+        println!("\n2. Set up your environment variables:");
+        println!("   ```");
+        println!("   cp .env.example .env");
+        println!("   # Edit .env with your configuration");
+        println!("   ```");
+        println!("\n3. Add the following configuration to your MCP config file:");
+        println!("   ```json");
+        println!("   \"{}\": {{", name);
+        println!("     \"command\": \"node\",");
+        println!("     \"args\": [");
+        println!("       \"{}/build/index.js\"", output_dir.display());
+        println!("     ],");
+        println!("     \"env\": {{");
+        println!("       \"NETWORK\": \"testnet\",");
+        println!("       \"NETWORK_PASSPHRASE\": \"Test SDF Network ; September 2015\",");
+        println!("       \"RPC_URL\": \"https://soroban-testnet.stellar.org\",");
+        println!("       \"CONTRACT_ID\": \"{}\"", contract_id);
+        println!("     }}");
+        println!("   }}");
+        println!("   ```");
+        println!("\n📚 For more information, check the README.md file in the generated project.");
 
         Ok(())
     }
@@ -284,8 +397,45 @@ impl McpServerGenerator {
                     name, description, params,
                     if has_params { ", ...functionParams" } else { "" },
                     if has_params {
-                        format!("\n      // Ensure parameters are in the correct order as defined in the contract\n      const orderedParams = [{}];\n      const scValParams = orderedParams.map(paramName => {{\n        const value = functionParams[paramName as keyof typeof functionParams];\n        if (value === undefined) {{\n          throw new Error(`Missing required parameter: ${{paramName}}`);\n        }}\n        return nativeToScVal(value);\n      }});",
-                            inputs.iter().map(|input| format!("'{}'", input.name)).collect::<Vec<_>>().join(", "))
+                        format!(r#"
+      // Ensure parameters are in the correct order as defined in the contract
+      const orderedParams = [{}];
+      const scValParams = orderedParams.map(paramName => {{
+        const value = functionParams[paramName as keyof typeof functionParams];
+        if (value === undefined) {{
+          throw new Error(`Missing required parameter: ${{paramName}}`);
+        }}
+        // Use appropriate conversion based on parameter type
+        switch(paramName) {{
+          {}
+          default:
+            return nativeToScVal(value);
+        }}
+      }});"#,
+                            inputs.iter().map(|input| format!("'{}'", input.name)).collect::<Vec<_>>().join(", "),
+                            inputs.iter().map(|input| {
+                                format!("case '{}':\n            return {}(value as {});",
+                                    input.name,
+                                    match input.value {
+                                        Type::Address => "addressToScVal",
+                                        Type::I128 => "i128ToScVal",
+                                        Type::U128 => "u128ToScVal",
+                                        Type::U32 => "u32ToScVal",
+                                        Type::Bool => "boolToScVal",
+                                        Type::Symbol => "stringToSymbol",
+                                        _ => "nativeToScVal",
+                                    },
+                                    match input.value {
+                                        Type::Address => "string",
+                                        Type::I128 | Type::U128 => "string",
+                                        Type::U32 => "number",
+                                        Type::Bool => "boolean",
+                                        Type::Symbol => "string",
+                                        _ => "any",
+                                    }
+                                )
+                            }).collect::<Vec<_>>().join("\n          ")
+                        )
                     } else {
                         String::new()
                     },
