@@ -17,7 +17,7 @@ impl McpServerGenerator {
     }
 
     fn type_to_zod(value: &Type) -> String {
-        let xdr_converter = type_to_js_xdr(value);
+        let _xdr_converter = type_to_js_xdr(value);
         match value {
             // Numbers
             Type::U64 | Type::I64 | Type::U32 | Type::I32 | Type::Timepoint | Type::Duration => {
@@ -86,30 +86,30 @@ impl McpServerGenerator {
     }
 
     fn get_type_description(value: &Type) -> String {
-        let xdr_converter = type_to_js_xdr(value);
+        let _xdr_converter = type_to_js_xdr(value);
         match value {
-            Type::U64 => format!("Unsigned 64-bit integer (0 to 18,446,744,073,709,551,615) - Converts to: {}", xdr_converter),
-            Type::I64 => format!("Signed 64-bit integer (-9,223,372,036,854,775,808 to 9,223,372,036,854,775,807) - Converts to: {}", xdr_converter),
-            Type::U32 => format!("Unsigned 32-bit integer (0 to 4,294,967,295) - Converts to: {}", xdr_converter),
-            Type::I32 => format!("Signed 32-bit integer (-2,147,483,648 to 2,147,483,647) - Converts to: {}", xdr_converter),
-            Type::U128 => format!("Unsigned 128-bit integer as string (0 to 340,282,366,920,938,463,463,374,607,431,768,211,455) - Converts to: {}", xdr_converter),
-            Type::I128 => format!("Signed 128-bit integer as string (-170,141,183,460,469,231,731,687,303,715,884,105,728 to 170,141,183,460,469,231,731,687,303,715,884,105,727) - Converts to: {}", xdr_converter),
-            Type::U256 => format!("Unsigned 256-bit integer as string - Converts to: {}", xdr_converter),
-            Type::I256 => format!("Signed 256-bit integer as string - Converts to: {}", xdr_converter),
-            Type::Address => format!("Stellar address in strkey format (G... for public keys, C... for contract) - Converts to: {}", xdr_converter),
-            Type::Symbol => format!("Stellar symbol/enum value - Converts to: {}", xdr_converter),
-            Type::String => format!("UTF-8 encoded string - Converts to: {}", xdr_converter),
-            Type::Timepoint => format!("Unix timestamp in seconds - Converts to: {}", xdr_converter),
-            Type::Duration => format!("Time duration in seconds - Converts to: {}", xdr_converter),
-            Type::Bool => format!("Boolean value (true/false) - Converts to: {}", xdr_converter),
-            Type::Bytes => format!("Binary data as Buffer, byte array, or base64 string - Converts to: {}", xdr_converter),
-            Type::BytesN { n } => format!("Fixed-length binary data of {} bytes as Buffer, byte array, or base64 string - Converts to: {}", n, xdr_converter),
-            Type::Option { value } => format!("Optional {} - Converts to: {}", type_to_ts(value), xdr_converter),
-            Type::Vec { element } => format!("Array of {} - Converts to: {}", type_to_ts(element), xdr_converter),
-            Type::Map { key, value } => format!("Map of {} to {} - Converts to: {}", type_to_ts(key), type_to_ts(value), xdr_converter),
-            Type::Tuple { elements } => format!("Tuple of [{}] - Converts to: {}", elements.iter().map(type_to_ts).collect::<Vec<_>>().join(", "), xdr_converter),
-            Type::Custom { name } => format!("Custom type: {} - Converts to: {}", name, xdr_converter),
-            _ => format!("Any value - Converts to: {}", xdr_converter),
+            Type::U64 => format!("Unsigned 64-bit integer (0 to 18,446,744,073,709,551,615) - Converts to: {}", _xdr_converter),
+            Type::I64 => format!("Signed 64-bit integer (-9,223,372,036,854,775,808 to 9,223,372,036,854,775,807) - Converts to: {}", _xdr_converter),
+            Type::U32 => format!("Unsigned 32-bit integer (0 to 4,294,967,295) - Converts to: {}", _xdr_converter),
+            Type::I32 => format!("Signed 32-bit integer (-2,147,483,648 to 2,147,483,647) - Converts to: {}", _xdr_converter),
+            Type::U128 => format!("Unsigned 128-bit integer as string (0 to 340,282,366,920,938,463,463,374,607,431,768,211,455) - Converts to: {}", _xdr_converter),
+            Type::I128 => format!("Signed 128-bit integer as string (-170,141,183,460,469,231,731,687,303,715,884,105,728 to 170,141,183,460,469,231,731,687,303,715,884,105,727) - Converts to: {}", _xdr_converter),
+            Type::U256 => format!("Unsigned 256-bit integer as string - Converts to: {}", _xdr_converter),
+            Type::I256 => format!("Signed 256-bit integer as string - Converts to: {}", _xdr_converter),
+            Type::Address => format!("Stellar address in strkey format (G... for public keys, C... for contract) - Converts to: {}", _xdr_converter),
+            Type::Symbol => format!("Stellar symbol/enum value - Converts to: {}", _xdr_converter),
+            Type::String => format!("UTF-8 encoded string - Converts to: {}", _xdr_converter),
+            Type::Timepoint => format!("Unix timestamp in seconds - Converts to: {}", _xdr_converter),
+            Type::Duration => format!("Time duration in seconds - Converts to: {}", _xdr_converter),
+            Type::Bool => format!("Boolean value (true/false) - Converts to: {}", _xdr_converter),
+            Type::Bytes => format!("Binary data as Buffer, byte array, or base64 string - Converts to: {}", _xdr_converter),
+            Type::BytesN { n } => format!("Fixed-length binary data of {} bytes as Buffer, byte array, or base64 string - Converts to: {}", n, _xdr_converter),
+            Type::Option { value } => format!("Optional {} - Converts to: {}", type_to_ts(value), _xdr_converter),
+            Type::Vec { element } => format!("Array of {} - Converts to: {}", type_to_ts(element), _xdr_converter),
+            Type::Map { key, value } => format!("Map of {} to {} - Converts to: {}", type_to_ts(key), type_to_ts(value), _xdr_converter),
+            Type::Tuple { elements } => format!("Tuple of [{}] - Converts to: {}", elements.iter().map(type_to_ts).collect::<Vec<_>>().join(", "), _xdr_converter),
+            Type::Custom { name } => format!("Custom type: {} - Converts to: {}", name, _xdr_converter),
+            _ => format!("Any value - Converts to: {}", _xdr_converter),
         }
     }
 
@@ -126,9 +126,11 @@ impl McpServerGenerator {
             }
         }
 
-        // Read the template file
+        // Read the template files
         let template_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/mcp_server_template");
         let template = fs::read_to_string(template_dir.join("src/index.ts"))?;
+        let helper_content = fs::read_to_string(template_dir.join("src/helper.ts"))?;
+        let logger_content = fs::read_to_string(template_dir.join("src/logger.ts"))?;
 
         // Replace placeholders in the template
         let mut index_content = template
@@ -138,9 +140,20 @@ impl McpServerGenerator {
         // Replace imports section with our enhanced version
         let imports = r#"import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { Contract, nativeToScVal, xdr, TransactionBuilder, SorobanRpc, Keypair, Address } from '@stellar/stellar-sdk';
+import { Contract, nativeToScVal, xdr, TransactionBuilder, SorobanRpc, Keypair, Address, BASE_FEE } from '@stellar/stellar-sdk';
 import { z } from 'zod';
-import { addressToScVal, i128ToScVal, u128ToScVal, stringToSymbol, numberToU64, numberToI128, boolToScVal, u32ToScVal } from './helper.js';"#;
+import { 
+  addressToScVal, 
+  i128ToScVal, 
+  u128ToScVal, 
+  stringToSymbol, 
+  numberToU64, 
+  numberToI128, 
+  boolToScVal, 
+  u32ToScVal,
+  submitTransaction 
+} from './helper.js';
+import { log } from './logger.js';"#;
 
         index_content = index_content.replace(
             r#"import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -155,72 +168,11 @@ import { z } from 'zod';"#,
         fs::create_dir_all(index_path.parent().unwrap())?;
         fs::write(index_path, index_content)?;
 
-        // Copy helper.ts
-        let helper_content = r#"import { Address, nativeToScVal, xdr } from '@stellar/stellar-sdk';
-
-/**
- * Convert a string to a Symbol ScVal
- */
-export const stringToSymbol = (val: string) => {
-  return nativeToScVal(val, { type: "symbol" });
-};
-
-/**
- * Convert a number to a u64 ScVal with 2 decimal precision
- */
-export const numberToU64 = (val: number) => {
-  const num = parseInt((val * 100).toFixed(0));
-  return nativeToScVal(num, { type: "u64" });
-};
-
-/**
- * Convert a number to an i128 ScVal with 2 decimal precision
- */
-export const numberToI128 = (val: number) => {
-  const num = parseInt((val * 100).toFixed(0));
-  return nativeToScVal(num, { type: "i128" });
-};
-
-/**
- * Convert a Stellar address to ScVal
- */
-export function addressToScVal(addressStr: string) {
-  // Validate and convert the address
-  const address = Address.fromString(addressStr);
-  // Convert to ScVal
-  return nativeToScVal(address);
-}
-
-/**
- * Convert a string to an i128 ScVal
- * This is useful for handling large numbers that exceed JavaScript's number precision
- */
-export function i128ToScVal(value: string) {
-  return nativeToScVal(value, { type: "i128" });
-}
-
-/**
- * Convert a string to a u128 ScVal
- * This is useful for handling large numbers that exceed JavaScript's number precision
- */
-export function u128ToScVal(value: string) {
-  return nativeToScVal(value, { type: "u128" });
-}
-
-/**
- * Convert a boolean to an ScVal
- */
-export function boolToScVal(value: boolean) {
-  return xdr.ScVal.scvBool(value);
-}
-
-/**
- * Convert a number to a u32 ScVal
- */
-export function u32ToScVal(value: number) {
-  return xdr.ScVal.scvU32(value);
-}"#;
+        // Write helper.ts
         fs::write(output_dir.join("src/helper.ts"), helper_content)?;
+
+        // Write logger.ts
+        fs::write(output_dir.join("src/logger.ts"), logger_content)?;
 
         // Copy and update package.json
         let package_json = fs::read_to_string(template_dir.join("package.json"))?;
@@ -327,27 +279,41 @@ export function u32ToScVal(value: number) {
   "{}",
   "{}",
   {{
-{}    simulate: z.boolean().optional().describe("If true, simulate the transaction instead of submitting it"),
-    signAndSubmit: z.boolean().optional().describe("If true, sign and submit the transaction"),
+{}    simulate: z.boolean().optional().default(true).describe("If true, simulate the transaction instead of submitting it"),
+    signAndSubmit: z.boolean().optional().default(false).describe("If true, sign and submit the transaction"),
+    publicKey: z.string().describe("Public key in strkey format (G... for public keys) - Converts to: addressToScVal(i)"),
     secretKey: z.string().optional().describe("Secret key in strkey format (S... for secret keys)")
   }},
   async (params) => {{
     try {{
-      const {{ simulate, signAndSubmit, secretKey{} }} = params;{}
+      const {{ simulate, signAndSubmit, publicKey, secretKey{} }} = params;{}
       
-      // Call the contract to get the assembled transaction
-      const tx = await contract.call("{}"{});
-      
-      // Get the XDR of the transaction and convert to base64 string
-      const xdr = tx.toXDR('base64');
-      
-      // Create a new TransactionBuilder from the XDR
-      const transaction = TransactionBuilder.fromXDR(xdr, config.networkPassphrase);
-      
-      if (simulate) {{
-        // Simulate the transaction using the server
-        const simulateResult = await server.simulateTransaction(transaction);
-        
+      // Get the account
+      const account = await server.getAccount(publicKey);
+      const transaction = new TransactionBuilder(account, {{
+        networkPassphrase: config.networkPassphrase,
+        fee: BASE_FEE,
+      }})
+      .addOperation(contract.call("{}"{}))
+      .setTimeout(30)
+      .build();
+
+      if (!simulate) {{
+        return {{
+          content: [
+            {{ type: "text", text: "Transaction XDR:" }},
+            {{ type: "text", text: transaction.toXDR() }}
+          ]
+        }};
+      }}
+
+      // Prepare the transaction
+      const preparedTx = await server.prepareTransaction(transaction);
+      const preparedXdr = preparedTx.toXDR();
+
+      // Simulate the transaction using the server
+      const simulateResult = await server.simulateTransaction(preparedTx);
+      if(!signAndSubmit) {{
         return {{
           content: [
             {{ type: "text", text: "Simulation Results:" }},
@@ -356,34 +322,51 @@ export function u32ToScVal(value: number) {
         }};
       }}
 
-      if (signAndSubmit) {{
-        if (!secretKey) {{
-          throw new Error("secretKey is required when signAndSubmit is true");
+      if(!secretKey) {{
+        throw new Error("secretKey is required when signAndSubmit is true");
+      }}
+
+      const keypair = Keypair.fromSecret(secretKey);
+      const tx = TransactionBuilder.fromXDR(preparedXdr, config.networkPassphrase);
+      tx.sign(keypair);
+      
+      try {{
+        const result = await submitTransaction(tx.toXDR(), {{
+          server,
+          networkPassphrase: config.networkPassphrase
+        }});
+        
+        if (result.status === 'SUCCESS') {{
+          return {{
+            content: [
+              {{ type: "text", text: "Transaction completed successfully!" }},
+              {{ type: "text", text: `Transaction hash: ${{result.hash}}` }},
+              {{ type: "text", text: "Full response:" }},
+              {{ type: "text", text: JSON.stringify(result.response, null, 2) }}
+            ]
+          }};
+        }} else if (result.status === 'FAILED') {{
+          throw new Error(`Transaction failed: ${{result.resultXdr}}`);
+        }} else {{
+          // Instead of throwing an error on timeout, return a message with explorer link
+          return {{
+            content: [
+              {{ type: "text", text: "Transaction submitted but still processing." }},
+              {{ type: "text", text: `Transaction hash: ${{result.hash}}` }},
+              {{ type: "text", text: `You can view the transaction status at: https://stellar.expert/explorer/${{config.network === 'testnet' ? 'testnet' : 'public'}}/tx/${{result.hash}}` }}
+            ]
+          }};
         }}
         
-        // Sign the transaction with the provided secret key
-        transaction.sign(Keypair.fromSecret(secretKey));
-        
-        // Submit the transaction
-        const submittedTx = await server.sendTransaction(transaction);
-        
+      }} catch (error: any) {{
         return {{
           content: [
-            {{ type: "text", text: "Transaction submitted!" }},
-            {{ type: "text", text: `Transaction hash: ${{submittedTx.hash}}` }},
-            {{ type: "text", text: "Full response:" }},
-            {{ type: "text", text: JSON.stringify(submittedTx, null, 2) }}
+            {{ type: "text", text: "Transaction failed!" }},
+            {{ type: "text", text: error.message }},
+            {{ type: "text", text: "Please check the transaction hash on the network explorer." }}
           ]
         }};
       }}
-
-      // If neither simulate nor signAndSubmit, return the XDR
-      return {{
-        content: [
-          {{ type: "text", text: "Transaction XDR:" }},
-          {{ type: "text", text: xdr }}
-        ]
-      }};
     }} catch (error: any) {{
       return {{
         content: [{{ 
@@ -394,7 +377,9 @@ export function u32ToScVal(value: number) {
     }}
   }}
 );"#,
-                    name, description, params,
+                    name,
+                    description,
+                    params,
                     if has_params { ", ...functionParams" } else { "" },
                     if has_params {
                         format!(r#"

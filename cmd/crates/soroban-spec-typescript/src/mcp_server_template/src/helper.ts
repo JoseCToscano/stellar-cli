@@ -1,4 +1,4 @@
-import { Address, nativeToScVal, xdr } from '@stellar/stellar-sdk';
+import { Address, nativeToScVal, xdr, SorobanRpc, TransactionBuilder, Keypair } from '@stellar/stellar-sdk';
 
 /**
  * Convert a string to a Symbol ScVal
@@ -61,4 +61,88 @@ export function boolToScVal(value: boolean) {
  */
 export function u32ToScVal(value: number) {
   return xdr.ScVal.scvU32(value);
+}
+
+/**
+ * Configuration for transaction submission
+ */
+export interface SubmitTransactionConfig {
+  server: SorobanRpc.Server;
+  networkPassphrase: string;
+  maxRetries?: number;
+  pollingIntervalMs?: number;
+}
+
+/**
+ * Submit a transaction and wait for its completion
+ */
+export async function submitTransaction(
+  signedXdr: string,
+  config: SubmitTransactionConfig
+): Promise<{
+  status: 'SUCCESS' | 'FAILED' | 'TIMEOUT',
+  hash?: string,
+  resultXdr?: string,
+  resultMetaXdr?: string,
+  response?: any
+}> {
+  const {
+    server,
+    networkPassphrase,
+    maxRetries = 10,
+    pollingIntervalMs = 2000
+  } = config;
+
+  try {
+    // Reconstruct and submit the transaction
+    const signedTx = TransactionBuilder.fromXDR(signedXdr, networkPassphrase);
+    const submittedTx = await server.sendTransaction(signedTx);
+    console.log('Transaction submitted:', submittedTx.hash);
+
+    // Wait for transaction completion
+    let retries = 0;
+    
+    while (retries < maxRetries) {
+      try {
+        const tx = await server.getTransaction(submittedTx.hash);
+        
+        if (tx.status === "SUCCESS") {
+          return {
+            status: 'SUCCESS',
+            hash: submittedTx.hash,
+            resultXdr: typeof tx.resultXdr === 'string' ? tx.resultXdr : tx.resultXdr?.toXDR() || '',
+            resultMetaXdr: typeof tx.resultMetaXdr === 'string' ? tx.resultMetaXdr : tx.resultMetaXdr?.toXDR() || '',
+            response: tx
+          };
+        } else if (tx.status === "FAILED") {
+          return {
+            status: 'FAILED',
+            hash: submittedTx.hash,
+            resultXdr: typeof tx.resultXdr === 'string' ? tx.resultXdr : tx.resultXdr?.toXDR() || '',
+            resultMetaXdr: typeof tx.resultMetaXdr === 'string' ? tx.resultMetaXdr : tx.resultMetaXdr?.toXDR() || '',
+            response: tx
+          };
+        }
+        
+        await new Promise(resolve => setTimeout(resolve, pollingIntervalMs));
+        retries++;
+        
+      } catch (error: any) {
+        if (error.message.includes("404") || error.message.includes("NOT_FOUND")) {
+          await new Promise(resolve => setTimeout(resolve, pollingIntervalMs));
+          retries++;
+          continue;
+        }
+        throw error;
+      }
+    }
+    
+    return {
+      status: 'TIMEOUT',
+      hash: submittedTx.hash
+    };
+    
+  } catch (error: any) {
+    throw new Error(`Transaction submission failed: ${error.message}`);
+  }
 }
