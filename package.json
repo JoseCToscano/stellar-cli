@@ -1,0 +1,36 @@
+{
+  "name": "stellar-mcp-cli",
+  "version": "0.0.1",
+  "description": "CLI tool that transforms any Soroban Smart Contract into an AI-ready Model Context Protocol (MCP) server",
+  "keywords": [
+    "MCP",
+    "Server",
+    "Stellar",
+    "ClI",
+    "Soroban"
+  ],
+  "bin": {
+    "stellar-mcp-cli": "cli.js"
+  },
+  "scripts": {
+    "postinstall": "node install.js"
+  },
+  "files": [
+    "cli.js",
+    "install.js",
+    "bin/"
+  ],
+  "homepage": "https://github.com/JoseCToscano/stellar-cli#readme",
+  "bugs": {
+    "url": "https://github.com/JoseCToscano/stellar-cli/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JoseCToscano/stellar-cli.git"
+  },
+  "license": "ISC",
+  "author": "Jose Toscano",
+  "type": "module",
+  "main": "index.js",
+  "devDependencies": {}
+}

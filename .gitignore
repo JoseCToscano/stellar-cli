@@ -10,3 +10,9 @@ test_snapshots
 local.sh
 .stellar
 .zed
+
+bin/stellar
+bin/stellar-mcp-macos
+bin/stellar-mcp-linux
+bin/stellar-mcp-win.exe
+node_modules/
