@@ -1,9 +1,9 @@
 pub mod java;
 pub mod json;
+pub mod mcp_server;
 pub mod python;
 pub mod rust;
 pub mod typescript;
-pub mod mcp_server;
 
 use crate::commands::global;
 
@@ -23,9 +23,6 @@ pub enum Cmd {
 
     /// Generate Java bindings
     Java(java::Cmd),
-
-    /// Generate MCP Server bindings
-    McpServer(Box<mcp_server::Cmd>),
 }
 
 #[derive(thiserror::Error, Debug)]
@@ -44,9 +41,6 @@ pub enum Error {
 
     #[error(transparent)]
     Java(#[from] java::Error),
-
-    #[error(transparent)]
-    McpServer(#[from] mcp_server::Error),
 }
 
 impl Cmd {
@@ -57,7 +51,6 @@ impl Cmd {
             Cmd::Typescript(ts) => ts.run().await?,
             Cmd::Python(python) => python.run()?,
             Cmd::Java(java) => java.run()?,
-            Cmd::McpServer(mcp) => mcp.run(global_args).await?,
         }
         Ok(())
     }

@@ -1,0 +1,10 @@
+[package]
+name = "stellar-mcp-server"
+version.workspace = true
+edition = "2021"
+publish = false
+
+[dependencies]
+soroban-cli = { path = "../../soroban-cli" }
+clap = { workspace = true, features = ["derive", "env", "deprecated", "string"] }
+tokio = { version = "1", features = ["full"] }
