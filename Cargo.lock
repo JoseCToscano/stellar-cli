@@ -4861,6 +4861,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "stellar-mcp-server-cli"
+version = "22.8.2"
+dependencies = [
+ "clap",
+ "hex",
+ "serde_json",
+ "soroban-sdk",
+ "soroban-spec",
+ "soroban-spec-tools",
+ "soroban-spec-typescript",
+ "stellar-rpc-client",
+ "stellar-strkey 0.0.11",
+ "stellar-xdr",
+ "tempfile",
+ "thiserror",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "stellar-rpc-client"
 version = "22.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
