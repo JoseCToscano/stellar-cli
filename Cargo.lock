@@ -4866,6 +4866,7 @@ version = "22.8.2"
 dependencies = [
  "clap",
  "hex",
+ "serde_json",
  "soroban-sdk",
  "soroban-spec",
  "soroban-spec-tools",
@@ -4873,8 +4874,11 @@ dependencies = [
  "stellar-rpc-client",
  "stellar-strkey 0.0.11",
  "stellar-xdr",
+ "tempfile",
  "thiserror",
  "tokio",
+ "tracing",
+ "tracing-subscriber",
 ]
 
 [[package]]

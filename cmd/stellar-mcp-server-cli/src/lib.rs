@@ -6,15 +6,18 @@ use soroban_spec_tools::contract::Spec;
 use soroban_spec_tools::utils::contract_id_from_str;
 use soroban_spec_typescript::mcp_server::McpServerGenerator;
 use stellar_xdr::curr::{
-    ContractExecutable, Hash, LedgerEntryData, LedgerKey, Limits, ReadXdr, ScVal,
+    ContractExecutable, Hash, LedgerEntryData, LedgerKey, Limits, ReadXdr, ScSpecEntry, ScVal,
 };
 use thiserror::Error;
+use tracing::{info, warn};
 
 pub type BoxError = Box<dyn std::error::Error + Send + Sync>;
 
 const EXAMPLES: &str = r#"Examples:
   stellar mcp-server --contract-id <ID> --rpc-url <URL> --network-passphrase <PHRASE> --output-dir ./server --name my-server
   stellar mcp-server --contract-id <ID> --wasm ./contract.wasm --output-dir ./server --name my-server
+
+After installing, verify with `stellar plugins --list`
 "#;
 
 #[derive(Parser, Debug)]
@@ -32,6 +35,9 @@ pub struct Args {
     /// Optional local wasm file to use for spec generation instead of fetching from network
     #[arg(long)]
     pub wasm: Option<PathBuf>,
+    /// Optional path to pre-fetched contract spec JSON file
+    #[arg(long)]
+    pub spec: Option<PathBuf>,
     /// RPC URL of the network (required if --wasm not provided)
     #[arg(long)]
     pub rpc_url: Option<String>,
@@ -63,6 +69,8 @@ pub enum CliError {
     StrKey(#[from] stellar_strkey::DecodeError),
     #[error(transparent)]
     Mcp(#[from] soroban_spec_typescript::mcp_server::Error),
+    #[error(transparent)]
+    Serde(#[from] serde_json::Error),
     #[error("missing required --rpc-url and --network-passphrase when no --wasm provided")]
     MissingNetwork,
     #[error("--output-dir cannot be a file: {0:?}")]
@@ -87,11 +95,18 @@ pub async fn run(args: Args) -> Result<(), CliError> {
     fs::create_dir_all(&args.output_dir)?;
 
     let contract_id = args.contract_id.clone();
-    let spec = if let Some(wasm_path) = args.wasm.clone() {
+    let spec = if let Some(spec_path) = args.spec.clone() {
+        let json = fs::read_to_string(spec_path)?;
+        let spec: Vec<ScSpecEntry> = serde_json::from_str(&json)?;
+        if spec.is_empty() {
+            warn!("contract spec returned no entries");
+        }
+        spec
+    } else if let Some(wasm_path) = args.wasm.clone() {
         let wasm_bytes = fs::read(wasm_path)?;
         let spec = Spec::new(&wasm_bytes)?.spec;
         if spec.is_empty() {
-            eprintln!("Warning: contract spec returned no entries");
+            warn!("contract spec returned no entries");
         }
         spec
     } else {
@@ -103,17 +118,13 @@ pub async fn run(args: Args) -> Result<(), CliError> {
         let wasm_bytes = fetch_wasm(&contract_id, &rpc_url, &passphrase).await?;
         let spec = Spec::new(&wasm_bytes)?.spec;
         if spec.is_empty() {
-            eprintln!("Warning: contract spec returned no entries");
+            warn!("contract spec returned no entries");
         }
         spec
     };
 
-    let mut generator = McpServerGenerator::new(false);
-    generator.generate(&args.output_dir, &args.name, &spec, &contract_id)?;
-    println!(
-        "MCP Server created at: {}",
-        args.output_dir.display()
-    );
+    generate_server(&args.output_dir, &args.name, &spec, &contract_id)?;
+    info!("MCP Server created at: {}", args.output_dir.display());
     Ok(())
 }
 
@@ -130,12 +141,12 @@ async fn fetch_wasm(
         match &contract.executable {
             ContractExecutable::Wasm(hash) => Ok(get_remote_wasm_from_hash(&client, hash).await?),
             ContractExecutable::StellarAsset => {
-                eprintln!("Warning: contract executable is StellarAsset");
+                warn!("contract executable is StellarAsset");
                 Err(CliError::UnexpectedContractData)
             }
         }
     } else {
-        eprintln!("Warning: unexpected contract data entry type");
+        warn!("unexpected contract data entry type");
         Err(CliError::UnexpectedContractData)
     }
 }
@@ -149,7 +160,7 @@ async fn get_remote_wasm_from_hash(
     let res = client.get_ledger_entries(&[code_key]).await?;
     let entries = res.entries.unwrap_or_default();
     if entries.is_empty() {
-        eprintln!("Warning: empty response fetching contract code");
+        warn!("empty response fetching contract code");
         return Err(soroban_rpc::Error::NotFound(
             "Contract Code".into(),
             hex::encode(hash),
@@ -160,10 +171,20 @@ async fn get_remote_wasm_from_hash(
             Ok(code.into())
         }
         scval => {
-            eprintln!("Warning: unexpected ledger entry data type");
+            warn!("unexpected ledger entry data type");
             Err(soroban_rpc::Error::UnexpectedContractCodeDataType(scval))
         }
     }
+}
+
+pub fn generate_server(
+    output_dir: &PathBuf,
+    name: &str,
+    spec: &[ScSpecEntry],
+    contract_id: &str,
+) -> Result<(), soroban_spec_typescript::mcp_server::Error> {
+    let mut generator = McpServerGenerator::new(false);
+    generator.generate(output_dir, name, spec, contract_id)
 }
 
 #[cfg(test)]
@@ -186,5 +207,32 @@ mod tests {
         assert_eq!(args.contract_id, "DEADBEEF");
         assert!(args.wasm.is_some());
     }
-}
 
+    #[tokio::test]
+    async fn run_errors_when_output_dir_exists() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let args = Args {
+            contract_id: "CA3D5KRYM6CB7OWQ6TWYRR3Z4T7GNZLKERYNZGGA5SOAOPIFY6YQGAXE".into(),
+            wasm: None,
+            spec: None,
+            rpc_url: None,
+            network_passphrase: None,
+            output_dir: temp_dir.path().to_path_buf(),
+            overwrite: false,
+            name: "demo".into(),
+        };
+        let err = run(args).await.unwrap_err();
+        assert!(matches!(err, CliError::OutputDirExists(_)));
+    }
+
+    #[tokio::test]
+    async fn fetch_wasm_fails_for_bad_url() {
+        let res = fetch_wasm(
+            "CA3D5KRYM6CB7OWQ6TWYRR3Z4T7GNZLKERYNZGGA5SOAOPIFY6YQGAXE",
+            "http://127.0.0.1:0",
+            "testnet",
+        )
+        .await;
+        assert!(res.is_err());
+    }
+}

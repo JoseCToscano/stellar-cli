@@ -14,11 +14,17 @@ clap = { workspace = true, features = ["derive"] }
 soroban-spec-tools = { workspace = true }
 soroban-spec-typescript = { workspace = true }
 soroban-rpc = { workspace = true }
-stellar-xdr = { workspace = true, features = ["curr", "std"] }
+stellar-xdr = { workspace = true, features = ["curr", "std", "serde"] }
 stellar-strkey = { workspace = true }
 soroban-sdk = { workspace = true }
 soroban-spec = { workspace = true }
 tokio = { version = "1", features = ["full"] }
 thiserror = { workspace = true }
 hex = { workspace = true }
+serde_json = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+
+[dev-dependencies]
+tempfile = "3.8.1"
 
