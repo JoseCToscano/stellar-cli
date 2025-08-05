@@ -1,0 +1,24 @@
+[package]
+name = "stellar-mcp-server-cli"
+description = "Stellar CLI plugin for generating MCP server projects"
+version.workspace = true
+edition = "2021"
+license = "Apache-2.0"
+
+[[bin]]
+name = "stellar-mcp-server"
+path = "src/main.rs"
+
+[dependencies]
+clap = { workspace = true, features = ["derive"] }
+soroban-spec-tools = { workspace = true }
+soroban-spec-typescript = { workspace = true }
+soroban-rpc = { workspace = true }
+stellar-xdr = { workspace = true, features = ["curr", "std"] }
+stellar-strkey = { workspace = true }
+soroban-sdk = { workspace = true }
+soroban-spec = { workspace = true }
+tokio = { version = "1", features = ["full"] }
+thiserror = { workspace = true }
+hex = { workspace = true }
+
